@@ -1,0 +1,10 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/dries/dev/kul/kul-2324/CUDA-PSO/pso-cpu-energy'
+relocations:
+  - { offsetInCU: 0x26, offset: 0x26, size: 0x8, addend: 0x0, symName: __Z16read_pricing_csvPKcPd, symObjAddr: 0x0, symBinAddr: 0x1000038F8, symSize: 0x1BC }
+  - { offsetInCU: 0x46, offset: 0x46, size: 0x8, addend: 0x0, symName: __Z16read_pricing_csvPKcPd, symObjAddr: 0x0, symBinAddr: 0x1000038F8, symSize: 0x1BC }
+  - { offsetInCU: 0xD2, offset: 0xD2, size: 0x8, addend: 0x0, symName: __Z14read_solar_csvPKcPd, symObjAddr: 0x1BC, symBinAddr: 0x100003AB4, symSize: 0x14C }
+  - { offsetInCU: 0x15C, offset: 0x15C, size: 0x8, addend: 0x0, symName: __Z15read_device_csvPKcRi, symObjAddr: 0x308, symBinAddr: 0x100003C00, symSize: 0x1EC }
+  - { offsetInCU: 0x209, offset: 0x209, size: 0x8, addend: 0x0, symName: _main, symObjAddr: 0x4F4, symBinAddr: 0x100003DEC, symSize: 0xC0 }
+...

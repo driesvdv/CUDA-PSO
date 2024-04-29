@@ -123,9 +123,4 @@ int main(void) {
     double *oven = read_device_csv("data/oven_1.csv", oven_size);
 
 
-    // Print each dishwasher element
-    for(int i = 0; i < oven_size; i++) {
-        printf("%f\n", oven[i]);
-    }
 }
-
