@@ -53,11 +53,11 @@ class PSO:
         new_velocities = self.w * self.velocities
         # add cognitive component
         r_1 = np.random.random(self.N)
-        r_1 = np.tile(r_1[:, None], (1, 2))
+        r_1 = np.tile(r_1[:, None], (1, self.particles.shape[1]))
         new_velocities += self.c_1 * r_1 * (self.p_bests - self.particles)
         # add social component
         r_2 = np.random.random(self.N)
-        r_2 = np.tile(r_2[:, None], (1, 2))
+        r_2 = np.tile(r_2[:, None], (1, self.particles.shape[1]))
         g_best = np.tile(self.g_best[None], (self.N, 1))
         new_velocities += self.c_2 * r_2 * (g_best  - self.particles)
 
@@ -67,8 +67,15 @@ class PSO:
         self.velocities = new_velocities
         self.particles = self.particles + np.round(new_velocities).astype(int)
 
-        # set bounds for particles
-        self.particles = np.clip(self.particles, 0, 14)
+        # ensure the sum of the first 25 elements of each particle is equal to 10
+        for i in range(self.particles.shape[0]):
+            total = np.sum(self.particles[i, :24])
+            if total != 30:
+                self.particles[i, :24] = self.particles[i, :24] * 30 / total
+
+
+        # set bounds for particles to brute force? Let the algorithm do its thing if possible todo compare
+        #self.particles = np.clip(self.particles, 0, 10)
 
 
     def update_bests(self):
