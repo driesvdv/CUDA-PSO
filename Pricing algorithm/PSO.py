@@ -67,7 +67,7 @@ class PSO:
         self.velocities = new_velocities
         self.particles = self.particles + np.round(new_velocities).astype(int)
 
-        # ensure the sum of the first 25 elements of each particle is equal to 10
+        # ensure the sum of the first 25 elements of each particle is equal to 30
         for i in range(self.particles.shape[0]):
             total = np.sum(self.particles[i, :24])
             if total != 30:

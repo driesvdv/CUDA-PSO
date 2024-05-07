@@ -3,8 +3,37 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 
+from numba import cuda, float32
+
 import sys
 import numpy as np
+
+@cuda.jit
+def calculate_price_kernel(pricing, dishwasher, particles, prices):
+    i = cuda.grid(1)
+    if i < particles.shape[0]:  # Check array boundaries
+        ev_consumption = particles[i, :24]
+        dishwasher_offset = particles[i, 24]
+
+        max_power_usage_per_hour = cuda.local.array(24, dtype=float32)
+
+        ev_price = 999999
+        dishw_price = 999999
+
+        if dishwasher_offset >= 0 and dishwasher_offset < len(pricing) - 9:
+            dishw_price = np.sum(dishwasher * pricing[dishwasher_offset:dishwasher_offset + len(dishwasher)])
+            max_power_usage_per_hour[dishwasher_offset:dishwasher_offset + len(dishwasher)] += dishwasher
+
+        tmp = np.sum(ev_consumption)
+        if ev_consumption.min() >= 0 and tmp == 30:
+            ev_price = np.sum(ev_consumption * pricing)
+            max_power_usage_per_hour += ev_consumption
+
+        # Enforce max energy consumption of 5 at each ev_consumption[i]
+        if max_power_usage_per_hour.max() > 5:
+            prices[i] = 999999
+        else:
+            prices[i] = ev_price + dishw_price
 
 class PSO:
 
@@ -99,32 +128,21 @@ class PSO:
 
 
 def calculate_price(particles):
-    ev_consumption = particles[:, :24]
-    dishwasher_offset = particles[:, 24]
+    n_particles = particles.shape[0]
 
-    prices = np.zeros(n_particles, dtype=float)
+    # Allocate memory on the device
+    particles_device = cuda.to_device(particles)
+    prices_device = cuda.device_array(n_particles)
 
-    # For loop to be parallelized in cuda
-    for i in range(n_particles):
-        max_power_usage_per_hour = np.zeros(24, dtype=float)
+    # Calculate grid size
+    threadsperblock = 32
+    blockspergrid = (n_particles + (threadsperblock - 1)) // threadsperblock
 
-        ev_price = 999999
-        dishw_price = 999999
+    # Call CUDA kernel
+    calculate_price_kernel[blockspergrid, threadsperblock](pricing, dishwasher, particles_device, prices_device)
 
-        if dishwasher_offset[i] >= 0 and dishwasher_offset[i] < len(pricing) - 9:
-            dishw_price = np.sum(dishwasher * pricing[dishwasher_offset[i]:dishwasher_offset[i] + len(dishwasher)])
-            max_power_usage_per_hour[dishwasher_offset[i]:dishwasher_offset[i] + len(dishwasher)] += dishwasher
-
-        tmp = np.sum(ev_consumption[i])
-        if ev_consumption[i].min() >= 0 and tmp == 30:
-            ev_price = np.sum(ev_consumption[i] * pricing)
-            max_power_usage_per_hour += ev_consumption[i]
-
-        # Enforce max energy consumption of 5 at each ev_consumption[i]
-        if max_power_usage_per_hour.max() > 5:
-            prices[i] = 999999
-        else:
-            prices[i] = ev_price + dishw_price
+    # Copy the result back to the host
+    prices = prices_device.copy_to_host()
 
     return prices
 
